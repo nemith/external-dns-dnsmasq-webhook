@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+	install | upgrade)
+		install -d -o root -g root -m 0750 /var/lib/external-dns-dnsmasq-webhook
+		if [ ! -e /var/lib/external-dns-dnsmasq-webhook/records.conf ]; then
+			install -o root -g root -m 0644 /dev/null /var/lib/external-dns-dnsmasq-webhook/records.conf
+		fi
+		;;
+esac
+
+exit 0

@@ -1,0 +1,61 @@
+.TH EXTERNAL-DNS-DNSMASQ-WEBHOOK 8 "September 2026" "external-dns-dnsmasq-webhook @VERSION@" "System Administration"
+.SH NAME
+external-dns-dnsmasq-webhook \- ExternalDNS webhook provider for dnsmasq
+.SH SYNOPSIS
+.B external-dns-dnsmasq-webhook
+.SH DESCRIPTION
+.B external-dns-dnsmasq-webhook
+implements version 1 of the ExternalDNS webhook API. It persists managed A,
+AAAA, and CNAME records, renders them into a dedicated dnsmasq configuration
+file, validates the complete dnsmasq configuration, and restarts dnsmasq.
+Failed updates are rolled back.
+.PP
+All configuration is supplied through environment variables. The packaged
+systemd unit reads
+.IR /etc/default/external-dns-dnsmasq-webhook .
+.SH ENVIRONMENT
+.TP
+.B DNSMASQ_WEBHOOK_LISTEN_ADDRESS
+IP address and TCP port on which the webhook listens.
+.TP
+.B DNSMASQ_WEBHOOK_ALLOWED_CIDRS
+Comma-separated client networks permitted to call the webhook.
+.TP
+.B DNSMASQ_WEBHOOK_DOMAIN
+DNS suffix the provider is authorized to manage.
+.TP
+.B DNSMASQ_WEBHOOK_STATE_FILE
+Persistent JSON provider state file.
+.TP
+.B DNSMASQ_WEBHOOK_CONFIG_FILE
+Generated dnsmasq configuration file.
+.TP
+.B DNSMASQ_WEBHOOK_DNSMASQ_BINARY
+Absolute path to dnsmasq.
+.TP
+.B DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY
+Absolute path to systemctl.
+.TP
+.B DNSMASQ_WEBHOOK_DNSMASQ_SERVICE
+Name of the dnsmasq systemd unit.
+.SH FILES
+.TP
+.I /etc/default/external-dns-dnsmasq-webhook
+Required site configuration.
+.TP
+.I /etc/dnsmasq.d/90-kubernetes-external-dns.conf
+Static include for the generated records.
+.TP
+.I /var/lib/external-dns-dnsmasq-webhook/records.conf
+Last-known-good generated dnsmasq records.
+.TP
+.I /var/lib/external-dns-dnsmasq-webhook/records.json
+Persistent provider state.
+.SH SECURITY
+The webhook has no application-layer authentication. Bind it only to a trusted
+interface and restrict TCP access with the host firewall. The provider also
+enforces the configured source CIDRs and managed domain.
+.SH SEE ALSO
+.BR dnsmasq (8),
+.BR external-dns (1),
+.BR systemctl (1)

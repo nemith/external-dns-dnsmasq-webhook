@@ -1,0 +1,11 @@
+# The API is intentionally reachable only on dns-router's routed LAN address and
+# accepts callers whose source address is in the Kubernetes node subnet.
+DNSMASQ_WEBHOOK_LISTEN_ADDRESS=192.0.2.1:8888
+DNSMASQ_WEBHOOK_ALLOWED_CIDRS=127.0.0.0/8,::1/128,192.0.2.1/32,198.51.100.0/24
+DNSMASQ_WEBHOOK_DOMAIN=example.test
+
+DNSMASQ_WEBHOOK_STATE_FILE=/var/lib/external-dns-dnsmasq-webhook/records.json
+DNSMASQ_WEBHOOK_CONFIG_FILE=/var/lib/external-dns-dnsmasq-webhook/records.conf
+DNSMASQ_WEBHOOK_DNSMASQ_BINARY=/usr/sbin/dnsmasq
+DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY=/usr/bin/systemctl
+DNSMASQ_WEBHOOK_DNSMASQ_SERVICE=dnsmasq.service

@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = configure ]; then
+	deb-systemd-helper unmask external-dns-dnsmasq-webhook.service >/dev/null || true
+	if [ -z "${2:-}" ] || deb-systemd-helper --quiet was-enabled external-dns-dnsmasq-webhook.service; then
+		deb-systemd-helper enable external-dns-dnsmasq-webhook.service >/dev/null || true
+	else
+		deb-systemd-helper update-state external-dns-dnsmasq-webhook.service >/dev/null || true
+	fi
+
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null || true
+		if [ -n "${2:-}" ]; then
+			deb-systemd-invoke try-restart external-dns-dnsmasq-webhook.service >/dev/null || true
+		else
+			deb-systemd-invoke start external-dns-dnsmasq-webhook.service >/dev/null || true
+		fi
+	fi
+fi
+
+exit 0
