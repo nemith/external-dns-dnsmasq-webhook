@@ -6,7 +6,8 @@ Wants=network-online.target dnsmasq.service
 
 [Service]
 Type=simple
-EnvironmentFile=/etc/default/external-dns-dnsmasq-webhook
+EnvironmentFile=-/etc/default/external-dns-dnsmasq-webhook
+EnvironmentFile=-/etc/sysconfig/external-dns-dnsmasq-webhook
 ExecStart=/usr/sbin/external-dns-dnsmasq-webhook
 Restart=on-failure
 RestartSec=5s

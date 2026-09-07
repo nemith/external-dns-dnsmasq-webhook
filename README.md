@@ -13,8 +13,8 @@ configuration and provider state are rolled back.
 
 ## Install on dns-router
 
-GoReleaser builds amd64 and arm64 Linux archives and Debian packages through
-nFPM. For a local snapshot build:
+GoReleaser builds amd64 and arm64 Linux archives, Debian packages, and RPMs
+through nFPM. For a local snapshot build and Debian installation on `dns-router`:
 
 ```sh
 goreleaser release --snapshot --clean
@@ -22,10 +22,18 @@ scp dist/external-dns-dnsmasq-webhook_*_amd64.deb operator@192.0.2.1:/tmp/extern
 ssh operator@192.0.2.1 sudo apt install /tmp/external-dns-dnsmasq-webhook.deb
 ```
 
-The package preserves the generated records across upgrades, registers the
-configuration files as conffiles, and starts the systemd service. Pushing a
-`v*` tag in the standalone GitHub repository runs the release workflow and
-publishes both architectures, their Debian packages, and checksums.
+On an RPM-family system, install the matching architecture with:
+
+```sh
+sudo dnf install dist/external-dns-dnsmasq-webhook-*.x86_64.rpm
+```
+
+Both package formats preserve generated records across upgrades, protect site
+configuration from replacement, and manage the systemd service. Debian reads
+`/etc/default/external-dns-dnsmasq-webhook`; RPM systems read
+`/etc/sysconfig/external-dns-dnsmasq-webhook`. Pushing a `v*` tag runs the release
+workflow and publishes archives, Debian packages, RPMs, and checksums for both
+architectures.
 
 For a manual installation without `dpkg`, build and stage the files, then run
 the remaining commands in the block on `dns-router`:

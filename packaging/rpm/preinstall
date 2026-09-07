@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+mkdir -p /var/lib/external-dns-dnsmasq-webhook
+chown root:root /var/lib/external-dns-dnsmasq-webhook
+chmod 0750 /var/lib/external-dns-dnsmasq-webhook
+if [ ! -e /var/lib/external-dns-dnsmasq-webhook/records.conf ]; then
+	umask 022
+	: >/var/lib/external-dns-dnsmasq-webhook/records.conf
+fi
+
+exit 0

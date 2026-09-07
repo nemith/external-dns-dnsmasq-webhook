@@ -1,4 +1,4 @@
-.TH EXTERNAL-DNS-DNSMASQ-WEBHOOK 8 "September 2026" "external-dns-dnsmasq-webhook @VERSION@" "System Administration"
+.TH EXTERNAL-DNS-DNSMASQ-WEBHOOK 8 "September 2026" "external-dns-dnsmasq-webhook" "System Administration"
 .SH NAME
 external-dns-dnsmasq-webhook \- ExternalDNS webhook provider for dnsmasq
 .SH SYNOPSIS
@@ -11,8 +11,10 @@ file, validates the complete dnsmasq configuration, and restarts dnsmasq.
 Failed updates are rolled back.
 .PP
 All configuration is supplied through environment variables. The packaged
-systemd unit reads
-.IR /etc/default/external-dns-dnsmasq-webhook .
+systemd unit reads the distribution's configuration file from
+.IR /etc/default/external-dns-dnsmasq-webhook
+or
+.IR /etc/sysconfig/external-dns-dnsmasq-webhook .
 .SH ENVIRONMENT
 .TP
 .B DNSMASQ_WEBHOOK_LISTEN_ADDRESS
@@ -41,7 +43,10 @@ Name of the dnsmasq systemd unit.
 .SH FILES
 .TP
 .I /etc/default/external-dns-dnsmasq-webhook
-Required site configuration.
+Required site configuration on Debian-family systems.
+.TP
+.I /etc/sysconfig/external-dns-dnsmasq-webhook
+Required site configuration on RPM-family systems.
 .TP
 .I /etc/dnsmasq.d/90-kubernetes-external-dns.conf
 Static include for the generated records.

@@ -5,7 +5,7 @@ project_name: external-dns-dnsmasq-webhook
 before:
   hooks:
     - go mod tidy
-    - ./packaging/debian/prepare-assets.sh {{ .Version }}
+    - sh ./packaging/prepare.sh
 
 builds:
   - id: external-dns-dnsmasq-webhook
@@ -40,12 +40,11 @@ archives:
       - deploy/external-dns-dnsmasq-webhook.service
 
 nfpms:
-  - id: debian
+  - id: linux-packages
     ids:
       - external-dns-dnsmasq-webhook
     package_name: external-dns-dnsmasq-webhook
-    file_name_template: >-
-      {{ .PackageName }}_{{ .Version }}_{{ .Arch }}
+    file_name_template: "{{ .ConventionalFileName }}"
     vendor: Brandon Bennett
     homepage: https://github.com/nemith/external-dns-dnsmasq-webhook
     maintainer: Brandon Bennett <brandon@brbe.me>
@@ -60,49 +59,88 @@ nfpms:
     bindir: /usr/sbin
     formats:
       - deb
-    dependencies:
-      - dnsmasq (>= 2.86)
-      - systemd
+      - rpm
+    changelog: packaging/changelog.yaml
+    mtime: "{{ .CommitDate }}"
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        # GoReleaser maps its explicit GOAMD64=v1 target to nFPM's optional
+        # Architecture-Variant field, which Debian Bookworm's Lintian predates.
+        - unknown-field
     contents:
-      - src: deploy/external-dns-dnsmasq-webhook.default
-        dst: /etc/default/external-dns-dnsmasq-webhook
-        type: config
-        file_info:
-          mode: 0o644
       - src: deploy/90-kubernetes-external-dns.conf
         dst: /etc/dnsmasq.d/90-kubernetes-external-dns.conf
-        type: config
+        type: config|noreplace
         file_info:
           mode: 0o644
       - src: deploy/external-dns-dnsmasq-webhook.service
         dst: /usr/lib/systemd/system/external-dns-dnsmasq-webhook.service
         file_info:
           mode: 0o644
-      - src: packaging/debian/copyright
-        dst: /usr/share/doc/external-dns-dnsmasq-webhook/copyright
-        file_info:
-          mode: 0o644
-      - src: packaging/debian/.generated/changelog.Debian.gz
-        dst: /usr/share/doc/external-dns-dnsmasq-webhook/changelog.Debian.gz
-        file_info:
-          mode: 0o644
-      - src: packaging/debian/.generated/external-dns-dnsmasq-webhook.8.gz
+      - src: packaging/.generated/external-dns-dnsmasq-webhook.8.gz
         dst: /usr/share/man/man8/external-dns-dnsmasq-webhook.8.gz
+        packager: deb
         file_info:
           mode: 0o644
-    scripts:
-      preinstall: packaging/debian/preinst
-      postinstall: packaging/debian/postinst
-      preremove: packaging/debian/prerm
-      postremove: packaging/debian/postrm
-    mtime: "{{ .CommitDate }}"
-    deb:
-      compression: xz
-      lintian_overrides:
-        - statically-linked-binary
-        # GoReleaser maps its explicit GOAMD64=v1 target to nFPM's optional
-        # Architecture-Variant field, which Debian Bookworm's Lintian predates.
-        - unknown-field
+      - src: packaging/.generated/external-dns-dnsmasq-webhook.8.gz
+        dst: /usr/share/man/man8/external-dns-dnsmasq-webhook.8.gz
+        type: doc
+        packager: rpm
+        file_info:
+          mode: 0o644
+      - src: deploy/external-dns-dnsmasq-webhook.default
+        dst: /etc/default/external-dns-dnsmasq-webhook
+        type: config
+        packager: deb
+        file_info:
+          mode: 0o644
+      - src: packaging/copyright
+        dst: /usr/share/doc/external-dns-dnsmasq-webhook/copyright
+        packager: deb
+        file_info:
+          mode: 0o644
+      - src: deploy/external-dns-dnsmasq-webhook.default
+        dst: /etc/sysconfig/external-dns-dnsmasq-webhook
+        type: config|noreplace
+        packager: rpm
+        file_info:
+          mode: 0o644
+      - src: packaging/copyright
+        dst: /usr/share/licenses/external-dns-dnsmasq-webhook/copyright
+        type: license
+        packager: rpm
+        file_info:
+          mode: 0o644
+      - src: README.md
+        dst: /usr/share/doc/external-dns-dnsmasq-webhook/README.md
+        type: doc
+        packager: rpm
+        file_info:
+          mode: 0o644
+    overrides:
+      deb:
+        dependencies:
+          - dnsmasq (>= 2.86)
+          - systemd
+        scripts:
+          preinstall: packaging/deb/preinstall
+          postinstall: packaging/deb/postinstall
+          preremove: packaging/deb/preremove
+          postremove: packaging/deb/postremove
+        deb:
+          compression: xz
+      rpm:
+        dependencies:
+          - dnsmasq >= 2.86
+          - systemd
+        scripts:
+          preinstall: packaging/rpm/preinstall
+          postinstall: packaging/rpm/postinstall
+          preremove: packaging/rpm/preremove
+          postremove: packaging/rpm/postremove
+        rpm:
+          summary: ExternalDNS webhook provider for dnsmasq
 
 checksum:
   name_template: checksums.txt

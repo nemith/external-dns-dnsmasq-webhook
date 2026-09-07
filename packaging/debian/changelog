@@ -1,5 +1,0 @@
-external-dns-dnsmasq-webhook (@VERSION@) stable; urgency=medium
-
-  * Initial package of the dnsmasq ExternalDNS webhook provider.
-
- -- Brandon Bennett <brandon@brbe.me>  Mon, 07 Sep 2026 00:00:00 -0600

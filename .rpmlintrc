@@ -1,0 +1,10 @@
+# Go produces an intentionally static executable. A static PIE would add a
+# runtime loader dependency without improving portability for this service.
+addFilter("statically-linked-binary")
+addFilter("position-independent-executable-suggested")
+
+# "Webhook" is the official ExternalDNS provider terminology.
+addFilter("spelling-error .*webhook")
+
+# This private repository is currently all-rights-reserved, not open source.
+addFilter("invalid-license Proprietary")
