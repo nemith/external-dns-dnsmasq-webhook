@@ -11,7 +11,7 @@ Download the appropriate `.deb` or `.rpm` from a GitHub release, then configure:
 - Debian: `/etc/default/external-dns-dnsmasq-webhook`
 - RPM: `/etc/sysconfig/external-dns-dnsmasq-webhook`
 
-All environment variables in that file are required. At minimum, set the listen address, allowed client CIDRs, and managed domain before starting the service:
+Set the listen address, allowed client CIDRs, and managed domain before starting the service. State paths and system commands use package defaults unless explicitly overridden.
 
 ```sh
 sudo systemctl enable --now external-dns-dnsmasq-webhook.service

@@ -57,7 +57,6 @@ nfpms:
     formats:
       - deb
       - rpm
-    changelog: packaging/changelog.yaml
     mtime: "{{ .CommitDate }}"
     deb:
       lintian_overrides:

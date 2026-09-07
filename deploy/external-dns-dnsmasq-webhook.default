@@ -3,8 +3,9 @@ DNSMASQ_WEBHOOK_LISTEN_ADDRESS=
 DNSMASQ_WEBHOOK_ALLOWED_CIDRS=
 DNSMASQ_WEBHOOK_DOMAIN=
 
-DNSMASQ_WEBHOOK_STATE_FILE=/var/lib/external-dns-dnsmasq-webhook/records.json
-DNSMASQ_WEBHOOK_CONFIG_FILE=/var/lib/external-dns-dnsmasq-webhook/records.conf
-DNSMASQ_WEBHOOK_DNSMASQ_BINARY=/usr/sbin/dnsmasq
-DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY=/usr/bin/systemctl
-DNSMASQ_WEBHOOK_DNSMASQ_SERVICE=dnsmasq.service
+# Optional overrides and their defaults.
+# DNSMASQ_WEBHOOK_STATE_FILE=/var/lib/external-dns-dnsmasq-webhook/records.json
+# DNSMASQ_WEBHOOK_CONFIG_FILE=/var/lib/external-dns-dnsmasq-webhook/records.conf
+# DNSMASQ_WEBHOOK_DNSMASQ_BINARY=/usr/sbin/dnsmasq
+# DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY=/usr/bin/systemctl
+# DNSMASQ_WEBHOOK_DNSMASQ_SERVICE=dnsmasq.service

@@ -21,6 +21,8 @@ type buildMetadata struct {
 	date    string
 }
 
+const exitConfiguration = 78
+
 func main() {
 	showVersion := flag.Bool("version", false, "print version information and exit")
 	flag.Usage = func() {
@@ -42,7 +44,7 @@ func main() {
 	cfg, err := loadConfig()
 	if err != nil {
 		slog.Error("invalid configuration", "error", err)
-		os.Exit(1)
+		os.Exit(exitConfiguration)
 	}
 	p, err := newProvider(cfg)
 	if err != nil {

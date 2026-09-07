@@ -10,7 +10,9 @@ AAAA, and CNAME records, renders them into a dedicated dnsmasq configuration
 file, validates the complete dnsmasq configuration, and restarts dnsmasq.
 Failed updates are rolled back.
 .PP
-All configuration is supplied through environment variables. The packaged
+The listen address, allowed client CIDRs, and managed domain are required.
+State paths and system commands have package defaults and may be overridden
+through environment variables. The packaged
 systemd unit reads the distribution's configuration file from
 .IR /etc/default/external-dns-dnsmasq-webhook
 or
