@@ -8,7 +8,3 @@ addFilter("spelling-error .*webhook")
 
 # This private repository is currently all-rights-reserved, not open source.
 addFilter("invalid-license Proprietary")
-
-# nFPM stores the upstream version in the changelog while RPM compares the
-# version-release pair; rpmlint reports them as incoherent even for 0.1.0-1.
-addFilter("incoherent-version-in-changelog")

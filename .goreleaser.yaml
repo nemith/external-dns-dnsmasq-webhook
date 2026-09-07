@@ -44,6 +44,7 @@ nfpms:
     ids:
       - external-dns-dnsmasq-webhook
     package_name: external-dns-dnsmasq-webhook
+    release: 1
     file_name_template: "{{ .ConventionalFileName }}"
     vendor: Brandon Bennett
     homepage: https://github.com/nemith/external-dns-dnsmasq-webhook
