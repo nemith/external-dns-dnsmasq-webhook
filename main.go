@@ -3,29 +3,40 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
+	"strings"
 	"syscall"
 	"time"
 )
 
-var (
-	version   = "dev"
-	commit    = "unknown"
-	buildDate = "unknown"
-)
+type buildMetadata struct {
+	version string
+	commit  string
+	date    string
+}
 
 func main() {
-	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "version") {
-		fmt.Printf("external-dns-dnsmasq-webhook %s (%s, %s)\n", version, commit, buildDate)
-		return
+	showVersion := flag.Bool("version", false, "print version information and exit")
+	flag.Usage = func() {
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options]\n", os.Args[0])
+		flag.PrintDefaults()
 	}
-	if len(os.Args) != 1 {
-		fmt.Fprintln(os.Stderr, "usage: external-dns-dnsmasq-webhook [--version]")
+	flag.Parse()
+	if flag.NArg() != 0 {
+		flag.Usage()
 		os.Exit(2)
+	}
+
+	build := currentBuildMetadata()
+	if *showVersion {
+		fmt.Printf("external-dns-dnsmasq-webhook %s (%s, %s)\n", build.version, build.commit, build.date)
+		return
 	}
 
 	cfg, err := loadConfig()
@@ -43,10 +54,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	api := &apiServer{provider: p, domain: cfg.Domain, allowed: cfg.AllowedCIDRs}
+	api := newAPIServer(p, cfg.Domain, cfg.AllowedCIDRs)
 	server := &http.Server{
 		Addr:              cfg.ListenAddress,
-		Handler:           api.handler(),
+		Handler:           api,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      45 * time.Second,
@@ -64,9 +75,33 @@ func main() {
 		}
 	}()
 
-	slog.Info("dnsmasq ExternalDNS webhook listening", "address", cfg.ListenAddress, "domain", cfg.Domain, "version", version)
+	slog.Info("dnsmasq ExternalDNS webhook listening", "address", cfg.ListenAddress, "domain", cfg.Domain, "version", build.version)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("HTTP server failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+func currentBuildMetadata() buildMetadata {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return buildMetadata{version: "dev", commit: "unknown", date: "unknown"}
+	}
+	return metadataFromBuildInfo(info)
+}
+
+func metadataFromBuildInfo(info *debug.BuildInfo) buildMetadata {
+	metadata := buildMetadata{version: "dev", commit: "unknown", date: "unknown"}
+	if info.Main.Version != "" && info.Main.Version != "(devel)" {
+		metadata.version = strings.TrimPrefix(info.Main.Version, "v")
+	}
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			metadata.commit = setting.Value
+		case "vcs.time":
+			metadata.date = setting.Value
+		}
+	}
+	return metadata
 }

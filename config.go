@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type config struct {
@@ -24,33 +25,31 @@ type config struct {
 
 var serviceNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.@-]*$`)
 
+type environmentConfig struct {
+	ListenAddress   string `envconfig:"LISTEN_ADDRESS" required:"true"`
+	AllowedCIDRs    string `envconfig:"ALLOWED_CIDRS" required:"true"`
+	Domain          string `envconfig:"DOMAIN" required:"true"`
+	StateFile       string `envconfig:"STATE_FILE" required:"true"`
+	ConfigFile      string `envconfig:"CONFIG_FILE" required:"true"`
+	DNSMasqBinary   string `envconfig:"DNSMASQ_BINARY" required:"true"`
+	SystemctlBinary string `envconfig:"SYSTEMCTL_BINARY" required:"true"`
+	DNSMasqService  string `envconfig:"DNSMASQ_SERVICE" required:"true"`
+}
+
 func loadConfig() (config, error) {
-	values := make(map[string]string)
-	for _, name := range []string{
-		"DNSMASQ_WEBHOOK_LISTEN_ADDRESS",
-		"DNSMASQ_WEBHOOK_ALLOWED_CIDRS",
-		"DNSMASQ_WEBHOOK_DOMAIN",
-		"DNSMASQ_WEBHOOK_STATE_FILE",
-		"DNSMASQ_WEBHOOK_CONFIG_FILE",
-		"DNSMASQ_WEBHOOK_DNSMASQ_BINARY",
-		"DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY",
-		"DNSMASQ_WEBHOOK_DNSMASQ_SERVICE",
-	} {
-		value := strings.TrimSpace(os.Getenv(name))
-		if value == "" {
-			return config{}, fmt.Errorf("%s is required", name)
-		}
-		values[name] = value
+	var environment environmentConfig
+	if err := envconfig.Process("DNSMASQ_WEBHOOK", &environment); err != nil {
+		return config{}, err
 	}
 
 	cfg := config{
-		ListenAddress:     values["DNSMASQ_WEBHOOK_LISTEN_ADDRESS"],
-		Domain:            strings.ToLower(strings.TrimSuffix(values["DNSMASQ_WEBHOOK_DOMAIN"], ".")),
-		StateFile:         values["DNSMASQ_WEBHOOK_STATE_FILE"],
-		DNSMasqConfigFile: values["DNSMASQ_WEBHOOK_CONFIG_FILE"],
-		DNSMasqBinary:     values["DNSMASQ_WEBHOOK_DNSMASQ_BINARY"],
-		SystemctlBinary:   values["DNSMASQ_WEBHOOK_SYSTEMCTL_BINARY"],
-		DNSMasqService:    values["DNSMASQ_WEBHOOK_DNSMASQ_SERVICE"],
+		ListenAddress:     strings.TrimSpace(environment.ListenAddress),
+		Domain:            strings.ToLower(strings.TrimSuffix(strings.TrimSpace(environment.Domain), ".")),
+		StateFile:         strings.TrimSpace(environment.StateFile),
+		DNSMasqConfigFile: strings.TrimSpace(environment.ConfigFile),
+		DNSMasqBinary:     strings.TrimSpace(environment.DNSMasqBinary),
+		SystemctlBinary:   strings.TrimSpace(environment.SystemctlBinary),
+		DNSMasqService:    strings.TrimSpace(environment.DNSMasqService),
 	}
 
 	host, portValue, err := net.SplitHostPort(cfg.ListenAddress)
@@ -81,7 +80,7 @@ func loadConfig() (config, error) {
 		return config{}, fmt.Errorf("DNSMASQ_WEBHOOK_DNSMASQ_SERVICE is invalid")
 	}
 
-	for _, value := range strings.Split(values["DNSMASQ_WEBHOOK_ALLOWED_CIDRS"], ",") {
+	for _, value := range strings.Split(environment.AllowedCIDRs, ",") {
 		prefix, err := netip.ParsePrefix(strings.TrimSpace(value))
 		if err != nil {
 			return config{}, fmt.Errorf("DNSMASQ_WEBHOOK_ALLOWED_CIDRS: %w", err)

@@ -11,46 +11,54 @@ import (
 
 func TestWebhookProtocol(t *testing.T) {
 	p := testProvider(t)
-	s := &apiServer{provider: p, domain: p.domain, allowed: []netip.Prefix{netip.MustParsePrefix("192.0.2.0/24")}}
+	s := newAPIServer(p, p.domain, []netip.Prefix{netip.MustParsePrefix("192.0.2.0/24")})
 
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-	request.Header.Set("Accept", webhookMediaType)
-	request.RemoteAddr = "192.0.2.10:1234"
-	response := httptest.NewRecorder()
-	s.handler().ServeHTTP(response, request)
-	if response.Code != http.StatusOK || response.Header().Get("Content-Type") != webhookMediaType {
-		t.Fatalf("negotiate returned status %d and content type %q", response.Code, response.Header().Get("Content-Type"))
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("Accept", webhookMediaType)
+	r.RemoteAddr = "192.0.2.10:1234"
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != http.StatusOK || w.Header().Get("Content-Type") != webhookMediaType {
+		t.Fatalf("negotiate returned status %d and content type %q", w.Code, w.Header().Get("Content-Type"))
 	}
 
 	body := []byte(`{"create":[{"dnsName":"app.example.test","recordType":"A","targets":["203.0.113.193"]}]}`)
-	request = httptest.NewRequest(http.MethodPost, "/records", bytes.NewReader(body))
-	request.Header.Set("Content-Type", webhookMediaType)
-	request.RemoteAddr = "192.0.2.10:1234"
-	response = httptest.NewRecorder()
-	s.handler().ServeHTTP(response, request)
-	if response.Code != http.StatusNoContent {
-		t.Fatalf("apply returned status %d: %s", response.Code, response.Body.String())
+	r = httptest.NewRequest(http.MethodPost, "/records", bytes.NewReader(body))
+	r.Header.Set("Content-Type", webhookMediaType)
+	r.RemoteAddr = "192.0.2.10:1234"
+	w = httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("apply returned status %d: %s", w.Code, w.Body.String())
 	}
 
-	request = httptest.NewRequest(http.MethodGet, "/records", nil)
-	request.Header.Set("Accept", webhookMediaType)
-	request.RemoteAddr = "192.0.2.10:1234"
-	response = httptest.NewRecorder()
-	s.handler().ServeHTTP(response, request)
-	if response.Code != http.StatusOK || !bytes.Contains(response.Body.Bytes(), []byte("app.example.test")) {
-		t.Fatalf("records returned status %d: %s", response.Code, response.Body.String())
+	r = httptest.NewRequest(http.MethodGet, "/records", nil)
+	r.Header.Set("Accept", webhookMediaType)
+	r.RemoteAddr = "192.0.2.10:1234"
+	w = httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != http.StatusOK || !bytes.Contains(w.Body.Bytes(), []byte("app.example.test")) {
+		t.Fatalf("records returned status %d: %s", w.Code, w.Body.String())
 	}
 }
 
 func TestWebhookRejectsUnauthorizedClient(t *testing.T) {
 	p := testProvider(t)
-	s := &apiServer{provider: p, domain: p.domain, allowed: []netip.Prefix{netip.MustParsePrefix("198.51.100.0/24")}}
-	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
-	request.RemoteAddr = "192.0.2.10:1234"
-	response := httptest.NewRecorder()
-	s.handler().ServeHTTP(response, request)
-	if response.Code != http.StatusForbidden {
-		t.Fatalf("got status %d, want 403", response.Code)
+	s := newAPIServer(p, p.domain, []netip.Prefix{netip.MustParsePrefix("198.51.100.0/24")})
+	r := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	r.RemoteAddr = "192.0.2.10:1234"
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("got status %d, want 403", w.Code)
+	}
+}
+
+func TestWriteJSONReturnsInternalServerError(t *testing.T) {
+	w := httptest.NewRecorder()
+	writeJSON(w, make(chan struct{}))
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("got status %d, want 500", w.Code)
 	}
 }
 

@@ -26,7 +26,7 @@ func TestLoadConfigRequiresSiteSettings(t *testing.T) {
 	setValidEnvironment(t)
 	t.Setenv("DNSMASQ_WEBHOOK_DOMAIN", "")
 	_, err := loadConfig()
-	if err == nil || !strings.Contains(err.Error(), "DNSMASQ_WEBHOOK_DOMAIN is required") {
+	if err == nil || !strings.Contains(err.Error(), "DNSMASQ_WEBHOOK_DOMAIN") {
 		t.Fatalf("got error %v", err)
 	}
 }
