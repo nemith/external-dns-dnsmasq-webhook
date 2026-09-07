@@ -66,6 +66,8 @@ nfpms:
     deb:
       lintian_overrides:
         - statically-linked-binary
+        # This private package has no Debian bug tracker entry to close.
+        - initial-upload-closes-no-bugs
         # GoReleaser maps its explicit GOAMD64=v1 target to nFPM's optional
         # Architecture-Variant field, which Debian Bookworm's Lintian predates.
         - unknown-field
